@@ -1,0 +1,4 @@
+# Linux 下 Windows 启动盘制作工具依赖
+# 本工具主要依赖系统工具，Python 使用标准库
+# 需安装的系统包（Ubuntu/Debian）:
+#   sudo apt install parted ntfs-3g wimtools curl

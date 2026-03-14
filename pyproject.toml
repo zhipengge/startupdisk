@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "startupdisk"
+version = "1.0.0"
+description = "Linux 下制作 Windows 10/11 UEFI 启动盘"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "startupdisk" }]
+dependencies = [
+    "customtkinter>=5.2.0",
+]
+
+[project.optional-dependencies]
+gui = ["customtkinter>=5.2.0"]
+
+[project.scripts]
+startupdisk = "startupdisk.cli:main"
