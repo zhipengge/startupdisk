@@ -16,6 +16,7 @@ def create_startup_disk(
     *,
     log_callback: Callable[[str], None] | None = None,
     progress_callback: Callable[[int, int, str], None] | None = None,
+    cancel_check: Callable[[], bool] | None = None,
 ) -> None:
     """
     制作 Windows 启动盘
@@ -64,6 +65,7 @@ def create_startup_disk(
             usb_mount,
             progress_callback=progress_callback,
             log_callback=log,
+            cancel_check=cancel_check,
         )
         log("复制完成。")
 

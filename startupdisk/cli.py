@@ -116,6 +116,12 @@ def cmd_create(args):
             sys.exit(0)
     
     try:
+        # 非 TTY 时强制行缓冲，确保 GUI 能实时读到 [PROGRESS]（参考 Stack Overflow: subprocess real-time output）
+        if not sys.stdout.isatty():
+            try:
+                sys.stdout.reconfigure(line_buffering=True)
+            except (AttributeError, OSError):
+                pass
         def progress(cur, total, name, *args):
             if len(args) >= 2 and args[1] > 0:
                 bc, tb = int(args[0]), int(args[1])

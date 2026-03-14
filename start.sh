@@ -17,4 +17,9 @@ elif ! .venv/bin/python -c "import customtkinter; from PIL import Image" 2>/dev/
 fi
 
 # GUI 以当前用户运行（避免 sudo 下 venv 导入问题），制作时自动请求 root
-exec "$ROOT/.venv/bin/python" -m startupdisk gui
+if ! "$ROOT/.venv/bin/python" -m startupdisk gui; then
+    echo ""
+    echo "启动失败，按回车键关闭..."
+    read -r
+    exit 1
+fi
