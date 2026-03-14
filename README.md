@@ -13,45 +13,19 @@
 - 非 root 用户自动通过 `pkexec` 弹出授权窗口，无需手动 `sudo`
 - 支持强制停止刷写
 
-## 系统要求
+## 快速开始
 
-- Linux（已在 Ubuntu / Debian 测试）
-- Python 3.10+
-- 系统依赖：
-
-```bash
-sudo apt install parted ntfs-3g python3-tk
-```
-
-## 安装
-
-### 使用 Pipenv（推荐）
-
-```bash
-git clone https://github.com/zhipengge/startupdisk.git
-cd startupdisk
-pip install pipenv
-pipenv install
-```
-
-### 或使用 pip
-
-```bash
-pip install -e .
-```
-
-## 使用
-
-### 图形界面（推荐）
+克隆仓库后，直接运行启动脚本：
 
 ```bash
 ./start.sh
 ```
 
-- 首次运行自动创建虚拟环境并安装依赖
+首次运行会自动安装所需依赖（需已安装 `pipenv`、`parted`、`ntfs-3g`、`python3-tk`），后续直接启动 GUI。
+
 - 启动后自动检测可用 U 盘
 - 选择 ISO 文件和目标 U 盘，点击「开始制作」
-- 非 root 用户会弹出系统授权窗口
+- 非 root 用户会弹出系统授权窗口，授权后自动继续
 - 制作过程中可通过「强制停止」终止刷写
 
 ### 命令行
@@ -61,20 +35,8 @@ pip install -e .
 python -m startupdisk list
 
 # 制作启动盘（需 root）
-sudo python -m startupdisk create -i /path/to/Win11.iso -d /dev/sdb
-
-# 跳过确认
-sudo python -m startupdisk create -i Win11.iso -d /dev/sdb -y
+sudo python -m startupdisk create -i /path/to/Win11.iso -d /dev/sdb -y
 ```
-
-**参数说明：**
-
-| 参数 | 说明 |
-|------|------|
-| `-i, --iso` | Windows ISO 文件路径 |
-| `-d, --device` | 目标 USB 设备（如 `/dev/sdb`） |
-| `--uefi-ntfs` | 可选，指定 UEFI:NTFS 镜像路径（不指定则自动下载） |
-| `-y, --yes` | 跳过确认提示 |
 
 ## 工作原理
 
