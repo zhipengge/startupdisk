@@ -70,29 +70,28 @@ def get_project_root() -> Path:
     return Path.cwd()
 
 
-def run_pipenv_install(log_callback=None) -> tuple[bool, str]:
+def run_python_deps_install(log_callback=None) -> tuple[bool, str]:
     """
-    执行 pipenv install
+    使用当前 Python 的 pip 安装项目依赖（无需 pipenv）
     返回 (成功, 输出信息)
     """
+    import sys
+
     root = get_project_root()
+    python = sys.executable
     try:
+        # pip install -e . 会安装项目及 pyproject.toml 中的依赖
         result = subprocess.run(
-            ["pipenv", "install"],
+            [python, "-m", "pip", "install", "-e", "."],
             cwd=root,
             capture_output=True,
             text=True,
             timeout=300,
         )
-        out = (result.stdout + result.stderr).strip() if result.returncode != 0 else result.stdout.strip()
+        out = (result.stdout + result.stderr).strip()
         if log_callback:
             log_callback(out)
         return result.returncode == 0, out or ("安装成功" if result.returncode == 0 else "安装失败")
-    except FileNotFoundError:
-        msg = "未找到 pipenv，请先安装: pip install pipenv"
-        if log_callback:
-            log_callback(msg)
-        return False, msg
     except subprocess.TimeoutExpired:
         msg = "安装超时"
         if log_callback:

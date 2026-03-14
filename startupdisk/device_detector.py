@@ -93,25 +93,62 @@ def get_partitions(device: str) -> list[str]:
     return sorted(partitions)
 
 
-def is_device_mounted(device: str) -> bool:
-    """检查设备或其分区是否已挂载"""
+def _get_mounted_targets(device: str) -> list[str]:
+    """获取设备及其分区已挂载的挂载点列表"""
+    targets = []
     try:
+        # 检查设备本身
         result = subprocess.run(
-            ["findmnt", "-S", device, "-n"],
+            ["findmnt", "-S", device, "-n", "-o", "TARGET"],
             capture_output=True,
             text=True,
         )
         if result.returncode == 0 and result.stdout.strip():
-            return True
+            targets.extend(result.stdout.strip().split("\n"))
         # 检查分区
-        device_name = Path(device).name
-        block_path = Path("/sys/block") / device_name
-        for entry in block_path.iterdir():
-            if entry.name.startswith(device_name):
-                part = f"/dev/{entry.name}"
-                r = subprocess.run(["findmnt", "-S", part, "-n"], capture_output=True, text=True)
-                if r.returncode == 0 and r.stdout.strip():
-                    return True
-        return False
+        for part in get_partitions(device):
+            r = subprocess.run(
+                ["findmnt", "-S", part, "-n", "-o", "TARGET"],
+                capture_output=True,
+                text=True,
+            )
+            if r.returncode == 0 and r.stdout.strip():
+                targets.extend(r.stdout.strip().split("\n"))
     except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
+        pass
+    return targets
+
+
+def is_device_mounted(device: str) -> bool:
+    """检查设备或其分区是否已挂载"""
+    return len(_get_mounted_targets(device)) > 0
+
+
+def unmount_device(device: str) -> tuple[bool, str]:
+    """
+    卸载设备及其所有分区的挂载点
+    返回 (成功, 消息)
+    """
+    targets = _get_mounted_targets(device)
+    if not targets:
+        return True, "设备未挂载"
+    # 先卸载深层挂载点
+    targets.sort(key=len, reverse=True)
+    errors = []
+    for target in targets:
+        try:
+            r = subprocess.run(
+                ["umount", target],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if r.returncode != 0:
+                errors.append(f"{target}: {r.stderr.strip() or r.stdout.strip() or '卸载失败'}")
+        except subprocess.TimeoutExpired:
+            errors.append(f"{target}: 超时")
+        except Exception as e:
+            errors.append(f"{target}: {e}")
+    if errors:
+        return False, "\n".join(errors)
+    return True, f"已卸载 {len(targets)} 个挂载点"

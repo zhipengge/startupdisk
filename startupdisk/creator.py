@@ -59,7 +59,12 @@ def create_startup_disk(
         usb_mount = mount_partition(ntfs_part)
 
         log("正在复制文件（可能需要几分钟）...")
-        copy_iso_to_usb(iso_mount, usb_mount, progress_callback=progress_callback)
+        copy_iso_to_usb(
+            iso_mount,
+            usb_mount,
+            progress_callback=progress_callback,
+            log_callback=log,
+        )
         log("复制完成。")
 
         log("正在卸载...")

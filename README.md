@@ -36,14 +36,20 @@ GUI 依赖：`customtkinter`（Pipfile / pyproject.toml 已包含）
 ### 1. 图形界面（推荐）
 
 ```bash
-# Pipenv
-sudo pipenv run python -m startupdisk gui
-
-# 或 pip
-sudo python -m startupdisk gui
+./start.sh
 ```
 
-**一键安装**：界面提供「一键安装 Python 依赖」和「一键安装系统依赖」按钮，首次使用可点击安装缺失依赖。
+**启动脚本行为**：
+- **从零开始**：无 `.venv` 时自动执行 `pipenv install` 创建环境（需已安装 pipenv：`pip install pipenv`）
+- **已装环境**：直接启动，无额外检查
+
+或手动运行：
+```bash
+pipenv install   # 首次
+sudo .venv/bin/python -m startupdisk gui
+```
+
+**自动安装**：启动时自动检查并安装缺失的 Python 与系统依赖，无需手动操作。
 
 ### 2. 列出可用 U 盘
 

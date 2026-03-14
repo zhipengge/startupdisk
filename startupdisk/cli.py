@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from .creator import create_startup_disk
-from .device_detector import get_usb_devices, is_device_mounted
+from .device_detector import get_usb_devices, is_device_mounted, unmount_device
 
 
 def main():
@@ -44,6 +44,10 @@ def main():
     )
     create_parser.add_argument("-y", "--yes", action="store_true", help="跳过确认")
     create_parser.set_defaults(func=cmd_create)
+
+    unmount_parser = subparsers.add_parser("unmount", help="卸载 USB 设备")
+    unmount_parser.add_argument("device", help="设备路径，如 /dev/sdb")
+    unmount_parser.set_defaults(func=cmd_unmount)
     
     args = parser.parse_args()
     if not args.command:
@@ -59,7 +63,9 @@ def cmd_gui(args):
         from .gui import run_gui
         run_gui()
     except ImportError:
-        print("错误: 需要安装 GUI 依赖: pip install customtkinter", file=sys.stderr)
+        project_dir = Path(__file__).resolve().parent.parent
+        print("错误: GUI 依赖未安装。请执行: pipenv install", file=sys.stderr)
+        print(f"  或: cd {project_dir} && .venv/bin/pip install customtkinter Pillow", file=sys.stderr)
         sys.exit(1)
 
 
@@ -95,8 +101,11 @@ def cmd_create(args):
         sys.exit(1)
     
     if is_device_mounted(device):
-        print(f"错误: {device} 或其分区已挂载，请先卸载")
-        sys.exit(1)
+        ok, msg = unmount_device(device)
+        if not ok:
+            print(f"错误: {device} 已挂载，自动卸载失败: {msg}")
+            sys.exit(1)
+        print(f"已卸载: {device}")
     
     if not args.yes:
         print(f"\n即将格式化 {device} 并写入 {iso_path.name}")
@@ -107,8 +116,15 @@ def cmd_create(args):
             sys.exit(0)
     
     try:
-        def progress(cur, total, name):
-            if total > 0:
+        def progress(cur, total, name, *args):
+            if len(args) >= 2 and args[1] > 0:
+                bc, tb = int(args[0]), int(args[1])
+                if sys.stdout.isatty():
+                    pct = bc * 100 // tb
+                    print(f"\r  进度: {pct}% ", end="", flush=True)
+                else:
+                    print(f"[PROGRESS]{bc},{tb}", flush=True)
+            elif total > 0 and sys.stdout.isatty():
                 pct = cur * 100 // total
                 print(f"\r  进度: {pct}% ({cur}/{total})", end="", flush=True)
 
@@ -116,10 +132,22 @@ def cmd_create(args):
             iso_path,
             device,
             uefi_ntfs_path=args.uefi_ntfs,
+            log_callback=lambda m: print(m),
             progress_callback=progress,
         )
     except Exception as e:
         print(f"\n错误: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def cmd_unmount(args):
+    """卸载设备"""
+    device = args.device if args.device.startswith("/dev/") else f"/dev/{args.device}"
+    ok, msg = unmount_device(device)
+    if ok:
+        print(msg)
+    else:
+        print(f"错误: {msg}", file=sys.stderr)
         sys.exit(1)
 
 

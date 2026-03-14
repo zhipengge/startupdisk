@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 startupdisk = {path = ".", editable = true}
+Pillow = ">=9.0.0"
 
 [dev-packages]
 
